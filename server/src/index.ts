@@ -5,6 +5,7 @@ import { Server, Socket } from "socket.io";
 import registerRoomHandlers from "./services/room";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import registerMessageStreamHandler from "./services/message";
+import { MessageContent } from "./utils/type";
 
 dotenv.config();
 

@@ -22,6 +22,7 @@ import { stringAvatar } from '../../utils/helpers';
 import { Message } from '../../utils/types';
 import { Form, Formik } from 'formik';
 import { useSocket } from '../../hooks/SocketProvider';
+import { isNil } from 'lodash';
 
 const Room: React.FC = () => {
   const { roomId } = useParams();
@@ -30,6 +31,10 @@ const Room: React.FC = () => {
   const socket = useSocket();
   const [sender, setSender] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    return () => exitRoom();
+  }, []);
 
   useEffect(() => {
     if (state && state.username) {
@@ -45,11 +50,22 @@ const Room: React.FC = () => {
   }, [messages]);
 
   const exitRoom = () => {
+    socket?.emit('message:in', {
+      roomId,
+      content: `${sender} has left the room`,
+      sender,
+      type: 'status',
+    } as Message);
     navigate('/', { replace: true });
   };
 
   const sendMessage = async (content: string) => {
-    socket?.emit('message:in', { roomId, content, sender });
+    socket?.emit('message:in', {
+      roomId,
+      content,
+      sender,
+      type: 'message',
+    } as Message);
   };
 
   return (
@@ -66,33 +82,50 @@ const Room: React.FC = () => {
       </AppBar>
       <ScrollableBox>
         <List sx={{ width: '100%' }}>
-          {messages.map((m, index) => (
-            <>
-              <ListItem alignItems="flex-start" key={`${index}`}>
-                <ListItemAvatar>
-                  {sender && <Avatar {...stringAvatar(m.sender)} />}
-                </ListItemAvatar>
-                <ListItemText
-                  primary={m.sender}
-                  secondary={
-                    <React.Fragment>
-                      <Typography
-                        sx={{ display: 'inline' }}
-                        component="span"
-                        variant="body2"
-                        color="text.primary"
-                      >
-                        {m.content}
-                      </Typography>
-                    </React.Fragment>
-                  }
-                />
-              </ListItem>
-              {messages.length - 1 > index && (
-                <Divider variant="inset" component="li" key={'divider'} />
-              )}
-            </>
-          ))}
+          {messages.map((m, index) =>
+            m.type === 'message' ? (
+              <>
+                <ListItem alignItems="flex-start" key={`${index}`}>
+                  <ListItemAvatar>
+                    {sender && <Avatar {...stringAvatar(m.sender)} />}
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={m.sender}
+                    secondary={
+                      <React.Fragment>
+                        <Typography
+                          sx={{ display: 'inline' }}
+                          component="span"
+                          variant="body2"
+                          color="text.primary"
+                        >
+                          {m.content}
+                        </Typography>
+                      </React.Fragment>
+                    }
+                  />
+                </ListItem>
+                {messages.length - 1 > index && (
+                  <Divider
+                    tabIndex={0}
+                    variant="middle"
+                    component="li"
+                    key={'divider'}
+                  />
+                )}
+              </>
+            ) : (
+              <Divider
+                sx={{ margin: '1rem 0' }}
+                tabIndex={0}
+                variant="middle"
+                component="li"
+                key={'divider'}
+              >
+                {m.content}
+              </Divider>
+            )
+          )}
         </List>
       </ScrollableBox>
       <Formik

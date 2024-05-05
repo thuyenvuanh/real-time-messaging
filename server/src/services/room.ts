@@ -12,6 +12,7 @@ function registerRoomHandlers(
       content: `${room.sender} joined the room`,
       sender: room.sender,
       roomId: room.roomId,
+      type: 'status'
     } as MessageContent);
   };
 

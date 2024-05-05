@@ -5,4 +5,5 @@ export interface Room {
 
 export interface MessageContent extends Room{
   content: string;
+  type: 'message' | 'status';
 }
